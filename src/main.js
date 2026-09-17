@@ -4,6 +4,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import './style.css';
 
 const app = document.querySelector('#app');
@@ -575,6 +576,73 @@ for (let i = 0; i < REED_COUNT; i++) {
 reeds.instanceMatrix.needsUpdate = true;
 if(reeds.instanceColor) reeds.instanceColor.needsUpdate = true;
 scene.add(reeds);
+
+// Upgrade the procedural fallback with lightweight photo-scanned CC0 assets.
+// If a remote asset ever fails, the procedural materials above stay active.
+async function upgradePhotoAssets() {
+  const loader = new THREE.TextureLoader();
+  loader.crossOrigin = 'anonymous';
+
+  async function loadTexture(url, { srgb = false, repeatX = 1, repeatY = 1 } = {}) {
+    try {
+      const texture = await loader.loadAsync(url);
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(repeatX, repeatY);
+      texture.anisotropy = maxAniso;
+      if (srgb) texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    } catch (error) {
+      console.warn('Optional photo asset failed; using procedural fallback:', url);
+      return null;
+    }
+  }
+
+  const base = 'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k';
+  const [forestDiff, forestNormal, forestRough, barkDiff, barkNormal, barkRough] = await Promise.all([
+    loadTexture(`${base}/forrest_ground_01/forrest_ground_01_diff_1k.jpg`, { srgb: true, repeatX: 13, repeatY: 13 }),
+    loadTexture(`${base}/forrest_ground_01/forrest_ground_01_nor_gl_1k.jpg`, { repeatX: 13, repeatY: 13 }),
+    loadTexture(`${base}/forrest_ground_01/forrest_ground_01_rough_1k.jpg`, { repeatX: 13, repeatY: 13 }),
+    loadTexture(`${base}/bark_brown_01/bark_brown_01_diff_1k.jpg`, { srgb: true, repeatX: 2, repeatY: 5 }),
+    loadTexture(`${base}/bark_brown_01/bark_brown_01_nor_gl_1k.jpg`, { repeatX: 2, repeatY: 5 }),
+    loadTexture(`${base}/bark_brown_01/bark_brown_01_rough_1k.jpg`, { repeatX: 2, repeatY: 5 }),
+  ]);
+
+  if (forestDiff) groundMat.map = forestDiff;
+  if (forestNormal) {
+    groundMat.normalMap = forestNormal;
+    groundMat.normalScale.set(0.72, 0.72);
+    groundMat.bumpMap = null;
+  }
+  if (forestRough) groundMat.roughnessMap = forestRough;
+  groundMat.needsUpdate = true;
+
+  if (barkDiff) trunkMat.map = barkDiff;
+  if (barkNormal) {
+    trunkMat.normalMap = barkNormal;
+    trunkMat.normalScale.set(0.85, 0.85);
+    trunkMat.bumpMap = null;
+  }
+  if (barkRough) trunkMat.roughnessMap = barkRough;
+  trunkMat.needsUpdate = true;
+
+  try {
+    const hdr = await new RGBELoader().loadAsync(
+      'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/rainforest_trail_1k.hdr'
+    );
+    hdr.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = hdr;
+    scene.background = hdr;
+    scene.backgroundBlurriness = 0.12;
+    scene.backgroundIntensity = 0.68;
+    groundMat.envMapIntensity = 0.32;
+    trunkMat.envMapIntensity = 0.22;
+    rockMat.envMapIntensity = 0.26;
+    waterMat.envMapIntensity = 1.0;
+  } catch (error) {
+    console.warn('Optional HDR forest environment failed; using procedural sky.');
+  }
+}
+upgradePhotoAssets();
 
 // Air motes and insects
 const MOTE_COUNT = 700;
