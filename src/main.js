@@ -598,13 +598,15 @@ async function upgradePhotoAssets() {
   }
 
   const base = 'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k';
-  const [forestDiff, forestNormal, forestRough, barkDiff, barkNormal, barkRough] = await Promise.all([
+  const [forestDiff, forestNormal, forestRough, barkDiff, barkNormal, barkRough, leavesDiff, leavesAlpha] = await Promise.all([
     loadTexture(`${base}/forrest_ground_01/forrest_ground_01_diff_1k.jpg`, { srgb: true, repeatX: 13, repeatY: 13 }),
     loadTexture(`${base}/forrest_ground_01/forrest_ground_01_nor_gl_1k.jpg`, { repeatX: 13, repeatY: 13 }),
     loadTexture(`${base}/forrest_ground_01/forrest_ground_01_rough_1k.jpg`, { repeatX: 13, repeatY: 13 }),
     loadTexture(`${base}/bark_brown_01/bark_brown_01_diff_1k.jpg`, { srgb: true, repeatX: 2, repeatY: 5 }),
     loadTexture(`${base}/bark_brown_01/bark_brown_01_nor_gl_1k.jpg`, { repeatX: 2, repeatY: 5 }),
     loadTexture(`${base}/bark_brown_01/bark_brown_01_rough_1k.jpg`, { repeatX: 2, repeatY: 5 }),
+    loadTexture('https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/tree_small_02/tree_small_02_leaves_diff_1k.jpg', { srgb: true }),
+    loadTexture('https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/tree_small_02/tree_small_02_leaves_alpha_1k.jpg'),
   ]);
 
   if (forestDiff) groundMat.map = forestDiff;
@@ -624,6 +626,12 @@ async function upgradePhotoAssets() {
   }
   if (barkRough) trunkMat.roughnessMap = barkRough;
   trunkMat.needsUpdate = true;
+
+  if (leavesDiff) leafMat.map = leavesDiff;
+  if (leavesAlpha) leafMat.alphaMap = leavesAlpha;
+  leafMat.alphaTest = 0.32;
+  leafMat.transparent = true;
+  leafMat.needsUpdate = true;
 
   try {
     const hdr = await new RGBELoader().loadAsync(
