@@ -226,17 +226,20 @@ def rig_character(label, is_goblin):
     parts = []
     cskin = goblin_skin if is_goblin else skin
     torso = goblin_dark if is_goblin else steel
-    parts.append(limb_part("Chest", (0,0,1.43), (.28,.38,.36), torso, "spine"))
-    parts.append(limb_part("Waist", (0,0,1.04), (.25,.29,.16), leather, "pelvis"))
-    parts.append(limb_part("Face", (.04,0,1.89), (.24,.23,.29), cskin, "head"))
+    armor_shape = "uv" if is_goblin else "cube"
+    parts.append(limb_part("Chest", (0,0,1.43), (.48,.64,.66) if not is_goblin else (.28,.38,.36), torso, "spine", armor_shape))
+    parts.append(limb_part("Waist", (0,0,1.04), (.41,.50,.30) if not is_goblin else (.25,.29,.16), leather, "pelvis", armor_shape))
+    parts.append(limb_part("Face", (.10,0,1.89), (.19,.18,.24), cskin, "head"))
     parts.append(limb_part("Hair_or_crest", (-.05,0,2.09), (.23,.23,.11), goblin_dark if is_goblin else hair, "head"))
+    if not is_goblin:
+        parts.append(limb_part("Deep_cloth_hood", (-.12,0,1.94), (.29,.28,.34), cloth, "head"))
     for sign, side in ((-1,"L"),(1,"R")):
-        parts.append(limb_part("Upper_arm_"+side, (0,sign*.47,1.42), (.17,.15,.25), torso, "upper_arm_"+side))
-        parts.append(limb_part("Forearm_"+side, (0,sign*.77,1.15), (.12,.11,.23), leather, "lower_arm_"+side))
+        parts.append(limb_part("Upper_arm_"+side, (0,sign*.47,1.42), (.27,.25,.43), torso, "upper_arm_"+side, armor_shape))
+        parts.append(limb_part("Forearm_"+side, (0,sign*.77,1.15), (.23,.20,.39), leather, "lower_arm_"+side, armor_shape))
         parts.append(limb_part("Hand_"+side, (.015,sign*.91,1.02), (.1,.10,.11), cskin, "lower_arm_"+side))
-        parts.append(limb_part("Thigh_"+side, (0,sign*.19,.78), (.18,.17,.26), leather, "thigh_"+side))
-        parts.append(limb_part("Boot_"+side, (.06,sign*.20,.29), (.19,.17,.29), leather, "shin_"+side))
-        parts.append(limb_part("Toe_"+side, (.19,sign*.20,.10), (.23,.17,.10), leather, "shin_"+side))
+        parts.append(limb_part("Thigh_"+side, (0,sign*.19,.78), (.30,.27,.49), leather, "thigh_"+side, armor_shape))
+        parts.append(limb_part("Boot_"+side, (.06,sign*.20,.29), (.30,.26,.52), leather, "shin_"+side, armor_shape))
+        parts.append(limb_part("Toe_"+side, (.19,sign*.20,.10), (.37,.26,.18), leather, "shin_"+side, armor_shape))
         if is_goblin:
             parts.append(limb_part("Ear_"+side, (.01,sign*.29,1.90), (.08,.19,.07), cskin, "head"))
         else:
@@ -246,8 +249,8 @@ def rig_character(label, is_goblin):
         for sign in (-1,1):
             parts.append(limb_part("Eye", (.24,sign*.105,1.96), (.035,.035,.035), eye, "head"))
     else:
-        parts.append(limb_part("Cape", (-.19,0,1.14), (.06,.41,.54), cloth, "spine", "cube"))
-        parts.append(limb_part("Cloak_collar", (-.16,0,1.72), (.16,.39,.14), cloth, "spine"))
+        parts.append(limb_part("Cape", (-.44,0,1.08), (.09,.80,1.30), cloth, "spine", "cube"))
+        parts.append(limb_part("Cloak_collar", (-.30,0,1.72), (.20,.72,.20), cloth, "spine"))
         for sign in (-1,1):
             parts.append(limb_part("Chest_gold_trim", (.21,sign*.21,1.51), (.035,.035,.26), gold, "spine"))
     bpy.ops.object.select_all(action="DESELECT")

@@ -98,6 +98,7 @@ path_mat=texture_material('M_DetailedForestPath',textures['T_ForestPath'],5,1.0)
 stone_mat=texture_material('M_DetailedWeatheredStone',textures['T_WeatheredStone'],3,.94)
 
 swapped=0
+relocated=0
 for actor in ACTORS.get_all_level_actors():
     label=actor.get_actor_label()
     component=actor.get_component_by_class(unreal.StaticMeshComponent)
@@ -107,6 +108,12 @@ for actor in ACTORS.get_all_level_actors():
         old=component.get_editor_property('static_mesh')
         component.set_static_mesh(meshes['SM_DetailedFir'] if old and 'Fir' in old.get_name() else meshes['SM_DetailedBeech'])
         component.set_mobility(unreal.ComponentMobility.MOVABLE)
+        location=actor.get_actor_location()
+        path_y=125*math.sin((location.x+8400)/880*.43)
+        if abs(location.y-path_y)<1050:
+            side=1 if location.y>=path_y else -1
+            actor.set_actor_location(unreal.Vector(location.x,path_y+side*1050,location.z),False,False)
+            relocated+=1
         swapped+=1
     elif label=='SW_Forest_ground' or label.startswith('SW_Grass_glade_'):
         component.set_material(0,floor_mat)
@@ -119,14 +126,15 @@ for i in range(1000):
     x=random.uniform(-8300,7000)
     path_y=125*math.sin((x+8400)/880*.43)
     side=random.choice((-1,1))
-    y=path_y+side*random.uniform(240,2200)
+    y=path_y+side*random.uniform(650,2600)
     spawn_scatter('SW_DetailFern_%04d'%i,meshes['SM_FernClump'],x,y,
-                  random.uniform(.65,1.55),random.uniform(0,360))
+                  random.uniform(.40,.90),random.uniform(0,360))
 for i in range(650):
     x=random.uniform(-8300,7000)
-    y=random.uniform(-2600,2600)
+    path_y=125*math.sin((x+8400)/880*.43)
+    y=path_y+random.choice((-1,1))*random.uniform(500,3000)
     spawn_scatter('SW_DetailLitter_%04d'%i,meshes['SM_LeafLitter'],x,y,
-                  random.uniform(.7,1.5),random.uniform(0,360))
+                  random.uniform(.28,.65),random.uniform(0,360))
 
 unreal.EditorLevelLibrary.save_current_level()
-log('ENHANCED trees='+str(swapped)+' ferns=1000 litter=650')
+log('ENHANCED trees='+str(swapped)+' relocated='+str(relocated)+' ferns=1000 litter=650')
