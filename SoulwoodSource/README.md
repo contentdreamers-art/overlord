@@ -7,9 +7,9 @@ This source builds the Soulwood encounter inside the existing Unreal project at
 
 ## Build order
 
-1. Run `blender/make_soulwood.py` in Blender's Scripting workspace. Move its
-   `generated` folder beneath `SoulwoodSource/blender` if Blender's editor
-   executes the script from a different current directory.
+1. Run `blender/make_soulwood.py` in Blender's Scripting workspace. Blender's
+   Text Editor may export to `C:\generated`; copy those FBX files into
+   `SoulwoodSource/blender/generated` before importing in Unreal.
 2. In Unreal's Python console, run `unreal/build_soulwood.py` to import those
    FBXs and populate the user's existing Soulwood map.
 3. Run `install-to-project.ps1` in PowerShell. The script adds the gameplay C++
@@ -17,6 +17,28 @@ This source builds the Soulwood encounter inside the existing Unreal project at
 4. With the Unreal editor closed, run `build-on-shadow.ps1` in PowerShell.
 5. Reopen `soulwoodgame.uproject` and run `unreal/finalize_soulwood.py` in the
    Python console to remove the encounter display stand-ins. Play the map.
+
+## Current art pass
+
+Run `blender/make_enhanced_forest.py` in Blender's Scripting workspace. Copy
+its detailed tree, fern, and litter FBX files from `C:\generated` into
+`SoulwoodSource/blender/generated`. Run `unreal/make_forest_textures.py` with
+Python to create original surface textures. In the Unreal Python console run
+`unreal/enhance_soulwood.py` to replace trees, texture the floor and path, and
+scatter scaled foliage. After editing and exporting either character in
+Blender, run `unreal/reimport_characters.py` to update the existing meshes and
+animations while keeping their skeletons.
+
+The Microsoft Store Blender executable on the current Shadow PC cannot be
+started by PowerShell directly. Open Blender and run the scripts from its
+Scripting workspace.
+
+## Visual status
+
+This is a playable prototype and art blockout. The current hero, castle, terrain,
+and forest are visibly simpler than the realistic reference images. The source
+is designed for further original modeling and texture work; the present art
+should not be presented as the requested final quality.
 
 ## Controls
 
