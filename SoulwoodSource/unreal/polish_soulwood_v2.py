@@ -122,8 +122,7 @@ for actor in ACTORS.get_all_level_actors():
     elif label.startswith(('SW_Tree_', 'SW_Vista_Canopy_', 'SW_Vista_FarCanopy_')):
         for i in range(comp.get_num_materials()):
             old = comp.get_material(i)
-            slot = str(comp.get_material_slot_names()[i]).lower()
-            name = (old.get_name() if old else '').lower() + ' ' + slot
+            name = (old.get_name() if old else '').lower()
             if 'bark' in name or 'crevice' in name:
                 comp.set_material(i, mats['bark'])
             elif 'leaf' in name or 'leaves' in name:
