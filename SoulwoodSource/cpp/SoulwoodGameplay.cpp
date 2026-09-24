@@ -286,9 +286,11 @@ ASoulwoodHero::ASoulwoodHero()
     Camera->SetupAttachment(CameraArm);
     Camera->SetFieldOfView(80.f);
     Bow = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EquippedBow"));
-    Bow->SetupAttachment(GetMesh(), TEXT("lower_arm_L"));
+    Bow->SetupAttachment(GetRootComponent());
     Bow->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    Bow->SetRelativeScale3D(FVector(.32f));
+    Bow->SetRelativeLocation(FVector(85.f, -48.f, 30.f));
+    Bow->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+    Bow->SetRelativeScale3D(FVector(.20f));
     Bow->SetVisibility(false);
     Wings = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AngelWings"));
     Wings->SetupAttachment(GetMesh(), TEXT("spine"));
@@ -521,5 +523,5 @@ ASoulwoodGameMode::ASoulwoodGameMode()
 void ASoulwoodGameMode::BeginPlay()
 {
     Super::BeginPlay();
-    GetWorld()->SpawnActor<ASoulwoodGoblin>(FVector(700,0,130), FRotator(0,180,0));
+    GetWorld()->SpawnActor<ASoulwoodGoblin>(FVector(-2500,0,130), FRotator(0,180,0));
 }
