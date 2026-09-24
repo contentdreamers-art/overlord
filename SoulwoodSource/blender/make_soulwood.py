@@ -10,7 +10,9 @@ import random
 from mathutils import Vector
 
 random.seed(240926)
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "generated")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+# Blender's Text Editor may report the open .blend file as __file__'s parent.
+ROOT = os.path.join(script_dir if os.path.isdir(script_dir) else os.path.abspath(os.sep), "generated")
 os.makedirs(ROOT, exist_ok=True)
 bpy.ops.object.select_all(action="SELECT")
 bpy.ops.object.delete(use_global=False)
