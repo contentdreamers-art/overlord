@@ -172,6 +172,8 @@ ASoulwoodGoblin::ASoulwoodGoblin()
     Sword = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RustySword"));
     Sword->SetupAttachment(GetMesh(), TEXT("lower_arm_R"));
     Sword->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    // The arrow placeholder imports at weapon scale and obscures the camera.
+    Sword->SetVisibility(false);
 }
 
 void ASoulwoodGoblin::BeginPlay()
