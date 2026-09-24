@@ -175,5 +175,30 @@ for side in (-1,1):
     box(objects,'Gate_jamb',(side*3.6,-18.45,6),(.9,.8,13),limestone,.15)
     cylinder(objects,'Gate_pinnacle',(side*3.6,-18.4,14),.75,3,8,gold)
 exporter('SM_SoulwoodGothicFortress',objects)
+
+def rocky_mass(name, rings, seed):
+    random.seed(seed)
+    count=48
+    vertices=[];faces=[];indices=[]
+    wobble=[random.uniform(.81,1.18) for _ in range(count)]
+    for height,radius in rings:
+        for j in range(count):
+            angle=j*math.tau/count
+            r=radius*wobble[j]*(1+.055*math.sin(angle*7+height*.08))
+            z=height+random.uniform(-.8,.8) if height else 0
+            vertices.append((math.cos(angle)*r,math.sin(angle)*r,z))
+    for row in range(len(rings)-1):
+        for j in range(count):
+            a=row*count+j;b=row*count+(j+1)%count
+            faces.append((a,b,b+count,a+count))
+            indices.append(0 if j%7 else 1)
+    faces.append(tuple(reversed(range((len(rings)-1)*count,len(rings)*count))))
+    indices.append(1)
+    obj=mesh(name,vertices,faces,[limestone,shadow],indices)
+    exporter(name,[obj])
+    bpy.data.objects.remove(obj,do_unlink=True)
+
+rocky_mass('SM_CastleCrag',[(0,81),(6,72),(17,59),(27,42),(34,39)],8270)
+rocky_mass('SM_DistantMountain',[(0,122),(17,103),(34,77),(54,49),(76,20),(85,5)],10137)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT,'Soulwood_Vista.blend'))
 print('SOULWOOD_VISTA_COMPLETE',OUT)

@@ -75,15 +75,21 @@ for actor in WORLD.get_all_level_actors():
 
 forest=import_asset('T_ForestFloor_Photo',TEXTURES,ROOT+'/Textures')
 path=import_asset('T_ForestPath_Photo',TEXTURES,ROOT+'/Textures')
-forest_mat=material('M_ForestFloor_Photo_01',forest,88)
+forest_mat=material('M_ForestFloor_Photo_02',forest,260)
 path_mat=material('M_ForestPath_Photo_01',path,3)
+stone=import_asset('T_GothicStone_Photo',TEXTURES,ROOT+'/Textures')
+stone_mat=material('M_GothicStone_Photo_01',stone,5)
 beech_a=import_asset('SM_VistaBeech_2041',MESHES,ROOT+'/Meshes',True)
 beech_b=import_asset('SM_VistaBeech_2049',MESHES,ROOT+'/Meshes',True)
 fortress=import_asset('SM_SoulwoodGothicFortress',MESHES,ROOT+'/Meshes',True)
+crag=import_asset('SM_CastleCrag',MESHES,ROOT+'/Meshes',True)
+mountain=import_asset('SM_DistantMountain',MESHES,ROOT+'/Meshes',True)
 
 tree_count=0
 for actor in WORLD.get_all_level_actors():
     name=actor.get_actor_label()
+    if name=='SW_MorningSun':
+        actor.get_component_by_class(unreal.DirectionalLightComponent).set_editor_property('intensity',3.4)
     component=actor.get_component_by_class(unreal.StaticMeshComponent)
     if name.startswith(('SW_Castle_','SW_Mountain_')):
         WORLD.destroy_actor(actor)
@@ -96,6 +102,8 @@ for actor in WORLD.get_all_level_actors():
             tree_count+=1
     elif name=='SW_Forest_ground' or name.startswith('SW_Grass_glade_'):
         component.set_material(0,forest_mat)
+        if name=='SW_Forest_ground':
+            actor.set_actor_scale3d(unreal.Vector(620,620,1.5))
     elif name.startswith('SW_Path_'):
         component.set_material(0,path_mat)
 
@@ -108,7 +116,18 @@ def spawn(name,mesh,position,scale,yaw):
     comp.set_mobility(unreal.ComponentMobility.MOVABLE)
     comp.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
 
-spawn('GothicFortress',fortress,(11300,8300,0),1,0)
+spawn('CastleCrag',crag,(20000,11800,0),1,0)
+spawn('GothicFortress',fortress,(20000,11800,3400),1,0)
+for actor in WORLD.get_all_level_actors():
+    if actor.get_actor_label().startswith(('SW_Vista_GothicFortress','SW_Vista_CastleCrag')):
+        comp=actor.get_component_by_class(unreal.StaticMeshComponent)
+        for slot in range(comp.get_num_materials()):
+            previous=comp.get_material(slot)
+            if not previous or not any(word in previous.get_name().lower() for word in ('slate','gold','shadow')):
+                comp.set_material(slot,stone_mat)
+for j,(x,y,s) in enumerate(((32000,25500,1.30),(35500,5500,1.55),
+                             (33000,-21500,1.25),(43000,16500,1.85))):
+    spawn('Mountain_%02d'%j,mountain,(x,y,-1800),s,j*61)
 for i in range(180):
     x=random.uniform(-8600,8250)
     y=random.uniform(-6000,6000)
@@ -117,6 +136,13 @@ for i in range(180):
     if x>6100 and y>3500:continue
     scale=random.uniform(.77,1.42)
     spawn('Canopy_%03d'%i,beech_a if i%2 else beech_b,(x,y,0),scale,random.uniform(0,360))
+for i in range(160):
+    x=random.uniform(9200,23000)
+    y=random.uniform(-11000,11000)
+    if abs(y)<500:continue
+    if abs(x-20000)<4300 and abs(y-11800)<6000:continue
+    spawn('FarCanopy_%03d'%i,beech_a if i%2 else beech_b,(x,y,0),
+          random.uniform(.85,1.45),random.uniform(0,360))
 
 unreal.EditorLevelLibrary.save_current_level()
 log('APPLIED floor and path photos; '+str(tree_count)+' old trees upgraded; dense extra canopy and fortress')
