@@ -288,6 +288,7 @@ ASoulwoodHero::ASoulwoodHero()
     Bow = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EquippedBow"));
     Bow->SetupAttachment(GetMesh(), TEXT("lower_arm_L"));
     Bow->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Bow->SetRelativeScale3D(FVector(.32f));
     Bow->SetVisibility(false);
     Wings = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AngelWings"));
     Wings->SetupAttachment(GetMesh(), TEXT("spine"));
@@ -484,7 +485,7 @@ void ASoulwoodHUD::DrawHUD()
     const FLinearColor Back(.018f,.022f,.028f,.78f);
     const FLinearColor Gold(.85f,.65f,.25f,1.f);
     DrawRect(Back, 25, 25, 240, 68);
-    DrawText(TEXT("SOULWOOD   LV 1"), Gold, 38, 30, nullptr, 1.05f);
+    DrawText(TEXT("SOULWOOD   LV 1"), Gold, 38, 30, nullptr, 1.9f);
     DrawRect(FLinearColor(.25f,.04f,.04f), 38, 56, 210, 10);
     DrawRect(FLinearColor(.75f,.07f,.045f), 38, 56, 210*Hero->GetHealth()/100.f, 10);
     DrawRect(FLinearColor(.03f,.08f,.14f), 38, 73, 210, 8);
@@ -502,13 +503,13 @@ void ASoulwoodHUD::DrawHUD()
         const bool bLocked = i==1 ? !Hero->HasFireball() : i==2 ? !Hero->HasSpeed() : i==3 ? !Hero->HasWings() : false;
         DrawRect(bActive ? FLinearColor(.25f,.17f,.045f,.94f) : Back, X,Y,108,60);
         DrawText(Slots[i], bLocked ? FLinearColor(.36f,.37f,.38f) : bActive ? Gold : FLinearColor::White,
-            X+8,Y+15,nullptr,1.f);
-        if (bLocked) DrawText(TEXT("LOCKED"),FLinearColor(.45f,.45f,.45f),X+8,Y+38,nullptr,.65f);
+            X+8,Y+10,nullptr,1.9f);
+        if (bLocked) DrawText(TEXT("LOCKED"),FLinearColor(.45f,.45f,.45f),X+8,Y+36,nullptr,1.2f);
     }
-    DrawText(FString::Printf(TEXT("Gold: %d"),Hero->GetGold()), Gold, W-150,30,nullptr,.9f);
+    DrawText(FString::Printf(TEXT("Gold: %d"),Hero->GetGold()), Gold, W-190,30,nullptr,1.7f);
     if (Hero->HasSpeed())
-        DrawText(FString::Printf(TEXT("Q  SPEED  %.0f%%"),Hero->GetEnergy()),FLinearColor(.2f,.65f,1.f),W-190,57,nullptr,.85f);
-    if (Hero->HasWings()) DrawText(TEXT("F  FLIGHT"),FLinearColor::White,W-135,80,nullptr,.8f);
+        DrawText(FString::Printf(TEXT("Q  SPEED  %.0f%%"),Hero->GetEnergy()),FLinearColor(.2f,.65f,1.f),W-250,75,nullptr,1.5f);
+    if (Hero->HasWings()) DrawText(TEXT("F  FLIGHT"),FLinearColor::White,W-180,115,nullptr,1.5f);
 }
 
 ASoulwoodGameMode::ASoulwoodGameMode()
