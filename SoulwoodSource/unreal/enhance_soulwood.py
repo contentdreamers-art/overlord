@@ -23,6 +23,9 @@ def log(message):
 
 
 def imported(name, directory, destination, mesh=False):
+    existing=EAL.load_asset(destination+'/'+name)
+    if existing and isinstance(existing,unreal.StaticMesh if mesh else unreal.Texture2D):
+        return existing
     filename=os.path.join(directory,name+('.fbx' if mesh else '.png'))
     if not os.path.exists(filename):
         raise RuntimeError('Missing original source file: '+filename)
@@ -101,7 +104,7 @@ for actor in ACTORS.get_all_level_actors():
     if not component:
         continue
     if label.startswith('SW_Tree_'):
-        old=component.get_static_mesh()
+        old=component.get_editor_property('static_mesh')
         component.set_static_mesh(meshes['SM_DetailedFir'] if old and 'Fir' in old.get_name() else meshes['SM_DetailedBeech'])
         component.set_mobility(unreal.ComponentMobility.MOVABLE)
         swapped+=1
