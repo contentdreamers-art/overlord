@@ -64,7 +64,7 @@ public:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
     virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& Event,
-        class AController* Instigator, AActor* Causer) override;
+        class AController* EventInstigator, AActor* Causer) override;
 protected:
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Sword;
     UPROPERTY() TObjectPtr<ASoulwoodHero> Target;
@@ -92,7 +92,7 @@ public:
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
     virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& Event,
-        class AController* Instigator, AActor* Causer) override;
+        class AController* EventInstigator, AActor* Causer) override;
     void Absorb(ESoulwoodReward Type);
     float GetHealth() const { return Health; }
     float GetEnergy() const { return Energy; }

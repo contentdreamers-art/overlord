@@ -234,7 +234,7 @@ void ASoulwoodGoblin::Tick(float DeltaTime)
 }
 
 float ASoulwoodGoblin::TakeDamage(float DamageAmount, FDamageEvent const& Event,
-    AController* Instigator, AActor* Causer)
+    AController* EventInstigator, AActor* Causer)
 {
     if (bDead) return 0.f;
     Health -= DamageAmount;
