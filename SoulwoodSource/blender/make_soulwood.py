@@ -71,8 +71,11 @@ def cube(name, loc, scale, material, bevel=0):
     if bevel:
         mod = o.modifiers.new("Hand softened edges", "BEVEL")
         mod.width = bevel
-        mod.segments = 2
-        o.modifiers.new("Weighted normals", "WEIGHTED_NORMAL")
+        mod.segments = 3
+        bpy.context.view_layer.objects.active = o
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+        normal = o.modifiers.new("Weighted normals", "WEIGHTED_NORMAL")
+        bpy.ops.object.modifier_apply(modifier=normal.name)
     return finish(o, name, material)
 
 
@@ -200,9 +203,43 @@ def bone(name, head, tail, parent=None):
 
 
 def limb_part(name, loc, scale, material, group, primitive="uv"):
-    obj = uv(name, loc, scale, material, 12) if primitive == "uv" else cube(name, loc, scale, material, .015)
+    obj = uv(name, loc, scale, material, 20) if primitive == "uv" else cube(name, loc, scale, material, .045)
     vg = obj.vertex_groups.new(name=group)
     vg.add(list(range(len(obj.data.vertices))), 1, "REPLACE")
+    return obj
+
+
+def flowing_cape(name, group):
+    vertices, faces = [], []
+    columns, rows = 20, 16
+    for row in range(rows + 1):
+        t = row / rows
+        z = 1.62 - 1.19 * t
+        width = .37 + .37 * t
+        for col in range(columns + 1):
+            u = col / columns * 2 - 1
+            x = -.35 - .20 * t + .06 * math.sin(u * 5.8 + t * 7.2) * t
+            zz = z + ((.07 * math.sin(col * 2.8) - .035 * (col % 3)) if row == rows else 0)
+            vertices.append((x, u * width, zz))
+    for row in range(rows):
+        for col in range(columns):
+            a = row * (columns + 1) + col
+            b = a + columns + 1
+            faces.extend(((a,a+1,b+1,b),(b,b+1,a+1,a)))
+    data = bpy.data.meshes.new(name)
+    data.from_pydata(vertices, [], faces)
+    data.materials.append(cloth)
+    uv = data.uv_layers.new(name='UVMap')
+    for polygon in data.polygons:
+        for loop_index in polygon.loop_indices:
+            vertex_index=data.loops[loop_index].vertex_index
+            row,col=divmod(vertex_index,columns+1)
+            uv.data[loop_index].uv=(col/columns,1-row/rows)
+        polygon.use_smooth=True
+    obj = bpy.data.objects.new(name, data)
+    bpy.context.collection.objects.link(obj)
+    vg = obj.vertex_groups.new(name=group)
+    vg.add(list(range(len(vertices))), 1, "REPLACE")
     return obj
 
 
@@ -228,31 +265,43 @@ def rig_character(label, is_goblin):
     parts = []
     cskin = goblin_skin if is_goblin else skin
     torso = goblin_dark if is_goblin else steel
-    armor_shape = "uv" if is_goblin else "cube"
-    parts.append(limb_part("Chest", (0,0,1.43), (.48,.64,.66) if not is_goblin else (.28,.38,.36), torso, "spine", armor_shape))
-    parts.append(limb_part("Waist", (0,0,1.04), (.41,.50,.30) if not is_goblin else (.25,.29,.16), leather, "pelvis", armor_shape))
+    armor_shape = "uv"
+    parts.append(limb_part("Chest", (0,0,1.43), (.32,.39,.43) if not is_goblin else (.28,.31,.31), torso, "spine", armor_shape))
+    parts.append(limb_part("Waist", (0,0,1.04), (.26,.31,.22) if not is_goblin else (.23,.26,.18), leather, "pelvis", armor_shape))
     parts.append(limb_part("Face", (.10,0,1.89), (.19,.18,.24), cskin, "head"))
     parts.append(limb_part("Hair_or_crest", (-.05,0,2.09), (.23,.23,.11), goblin_dark if is_goblin else hair, "head"))
     if not is_goblin:
         parts.append(limb_part("Deep_cloth_hood", (-.12,0,1.94), (.29,.28,.34), cloth, "head"))
     for sign, side in ((-1,"L"),(1,"R")):
-        parts.append(limb_part("Upper_arm_"+side, (0,sign*.47,1.42), (.27,.25,.43), torso, "upper_arm_"+side, armor_shape))
-        parts.append(limb_part("Forearm_"+side, (0,sign*.77,1.15), (.23,.20,.39), leather, "lower_arm_"+side, armor_shape))
+        parts.append(limb_part("Upper_arm_"+side, (0,sign*.47,1.42), (.18,.19,.36), torso, "upper_arm_"+side, armor_shape))
+        parts.append(limb_part("Forearm_"+side, (0,sign*.77,1.15), (.16,.16,.31), leather, "lower_arm_"+side, armor_shape))
         parts.append(limb_part("Hand_"+side, (.015,sign*.91,1.02), (.1,.10,.11), cskin, "lower_arm_"+side))
-        parts.append(limb_part("Thigh_"+side, (0,sign*.19,.78), (.30,.27,.49), leather, "thigh_"+side, armor_shape))
-        parts.append(limb_part("Boot_"+side, (.06,sign*.20,.29), (.30,.26,.52), leather, "shin_"+side, armor_shape))
-        parts.append(limb_part("Toe_"+side, (.19,sign*.20,.10), (.37,.26,.18), leather, "shin_"+side, armor_shape))
+        parts.append(limb_part("Thigh_"+side, (0,sign*.19,.78), (.22,.21,.40), leather, "thigh_"+side, armor_shape))
+        parts.append(limb_part("Boot_"+side, (.02,sign*.20,.29), (.19,.18,.37), leather, "shin_"+side, armor_shape))
+        parts.append(limb_part("Toe_"+side, (.15,sign*.20,.10), (.27,.19,.13), leather, "shin_"+side, armor_shape))
         if is_goblin:
             parts.append(limb_part("Ear_"+side, (.01,sign*.29,1.90), (.08,.19,.07), cskin, "head"))
         else:
-            parts.append(limb_part("Pauldron_"+side, (-.02,sign*.39,1.59), (.22,.20,.12), steel, "upper_arm_"+side))
+            parts.append(limb_part("Layered_pauldron_"+side, (-.02,sign*.43,1.61), (.25,.28,.18), steel, "upper_arm_"+side))
+            parts.append(limb_part("Gold_pauldron_rim_"+side, (-.03,sign*.50,1.54), (.22,.25,.045), gold, "upper_arm_"+side))
+            parts.append(limb_part("Articulated_vambrace_"+side, (.025,sign*.77,1.18), (.17,.17,.26), steel, "lower_arm_"+side))
+            parts.append(limb_part("Steel_knee_"+side, (.10,sign*.20,.54), (.16,.19,.14), steel, "thigh_"+side))
+            parts.append(limb_part("Ribbed_greave_"+side, (.15,sign*.20,.30), (.11,.18,.29), steel, "shin_"+side))
     if is_goblin:
         parts.append(limb_part("Nose", (.28,0,1.83), (.14,.12,.11), cskin, "head"))
         for sign in (-1,1):
             parts.append(limb_part("Eye", (.24,sign*.105,1.96), (.035,.035,.035), eye, "head"))
     else:
-        parts.append(limb_part("Cape", (-.44,0,1.08), (.09,.80,1.30), cloth, "spine", "cube"))
-        parts.append(limb_part("Cloak_collar", (-.30,0,1.72), (.20,.72,.20), cloth, "spine"))
+        parts.append(flowing_cape("Torn_flowing_cape", "spine"))
+        parts.append(limb_part("Cloak_collar", (-.31,0,1.72), (.18,.43,.15), cloth, "spine"))
+        parts.append(limb_part("Breastplate", (.21,0,1.47), (.12,.34,.35), steel, "spine"))
+        parts.append(limb_part("Backplate", (-.22,0,1.47), (.10,.34,.33), steel, "spine"))
+        parts.append(limb_part("Leather_waist_belt", (-.03,0,1.08), (.30,.38,.07), leather, "pelvis"))
+        for sign in (-1,1):
+            strap = limb_part("Crossed_back_strap", (-.34,sign*.13,1.40), (.052,.10,.49), leather, "spine", "cube")
+            strap.rotation_euler[0] = sign*.47
+            parts.append(strap)
+            parts.append(limb_part("Gilded_belt_plate", (.25,sign*.12,1.08), (.06,.09,.08), gold, "pelvis", "cube"))
         for sign in (-1,1):
             parts.append(limb_part("Chest_gold_trim", (.21,sign*.21,1.51), (.035,.035,.26), gold, "spine"))
     bpy.ops.object.select_all(action="DESELECT")

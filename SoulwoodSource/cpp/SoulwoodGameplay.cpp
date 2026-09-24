@@ -310,6 +310,18 @@ void ASoulwoodHero::BeginPlay()
 {
     Super::BeginPlay();
     GetMesh()->SetSkeletalMeshAsset(Soulwood::Asset<USkeletalMesh>(TEXT("/Game/SoulwoodOriginal/Characters/SK_Adventurer.SK_Adventurer")));
+    UMaterialInterface* CloakMaterial = Soulwood::Asset<UMaterialInterface>(TEXT("/Game/SoulwoodOriginal/Materials/M_CloakCloth_Photo.M_CloakCloth_Photo"));
+    if (CloakMaterial)
+    {
+        for (int32 Index = 0; Index < GetMesh()->GetNumMaterials(); ++Index)
+        {
+            UMaterialInterface* Existing = GetMesh()->GetMaterial(Index);
+            if (Existing && Existing->GetName().Contains(TEXT("Charcoal_cloak")))
+            {
+                GetMesh()->SetMaterial(Index, CloakMaterial);
+            }
+        }
+    }
     Bow->SetStaticMesh(Soulwood::Asset<UStaticMesh>(TEXT("/Game/SoulwoodOriginal/Meshes/SM_HunterBow.SM_HunterBow")));
     Wings->SetStaticMesh(Soulwood::Asset<UStaticMesh>(TEXT("/Game/SoulwoodOriginal/Meshes/SM_AngelWings.SM_AngelWings")));
     IdleAnimation = Soulwood::Asset<UAnimSequence>(TEXT("/Game/SoulwoodOriginal/Characters/SK_AdventurerSK_Adventurer_Hero_Idle.SK_AdventurerSK_Adventurer_Hero_Idle"));
