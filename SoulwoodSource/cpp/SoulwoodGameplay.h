@@ -14,6 +14,7 @@ class UProjectileMovementComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class ASoulwoodHero;
+class UAnimSequence;
 
 UENUM(BlueprintType)
 enum class ESoulwoodReward : uint8 { Gold, Fire, Beast, Angel };
@@ -72,6 +73,12 @@ protected:
     float AttackCooldown = 0.f;
     bool bWindingUp = false;
     bool bDead = false;
+    UPROPERTY() TObjectPtr<UAnimSequence> IdleAnimation;
+    UPROPERTY() TObjectPtr<UAnimSequence> WalkAnimation;
+    UPROPERTY() TObjectPtr<UAnimSequence> AttackAnimation;
+    UPROPERTY() TObjectPtr<UAnimSequence> DeathAnimation;
+    UPROPERTY() TObjectPtr<UAnimSequence> CurrentAnimation;
+    void PlayState(UAnimSequence* Animation, bool bLoop);
     void DropRewards();
 };
 
@@ -114,6 +121,14 @@ protected:
     bool bSpeedActive = false;
     bool bFlightActive = false;
     bool bDrawing = false;
+    UPROPERTY() TObjectPtr<UAnimSequence> IdleAnimation;
+    UPROPERTY() TObjectPtr<UAnimSequence> RunAnimation;
+    UPROPERTY() TObjectPtr<UAnimSequence> BowAnimation;
+    UPROPERTY() TObjectPtr<UAnimSequence> CastAnimation;
+    UPROPERTY() TObjectPtr<UAnimSequence> FlightAnimation;
+    UPROPERTY() TObjectPtr<UAnimSequence> CurrentAnimation;
+    float CastAnimationUntil = 0.f;
+    void PlayState(UAnimSequence* Animation, bool bLoop);
     void MoveForward(float Value);
     void MoveRight(float Value);
     void Rise(float Value);

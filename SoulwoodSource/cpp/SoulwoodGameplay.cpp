@@ -19,6 +19,7 @@
 #include "GameFramework/DamageType.h"
 #include "Materials/MaterialInterface.h"
 #include "Math/RotationMatrix.h"
+#include "Animation/AnimSequence.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace Soulwood
@@ -178,7 +179,22 @@ void ASoulwoodGoblin::BeginPlay()
     Super::BeginPlay();
     GetMesh()->SetSkeletalMeshAsset(Soulwood::Asset<USkeletalMesh>(TEXT("/Game/SoulwoodOriginal/Characters/SK_Goblin.SK_Goblin")));
     Sword->SetStaticMesh(Soulwood::Asset<UStaticMesh>(TEXT("/Game/SoulwoodOriginal/Meshes/SM_Arrow.SM_Arrow")));
+    IdleAnimation = Soulwood::Asset<UAnimSequence>(TEXT("/Game/SoulwoodOriginal/Characters/SK_GoblinSK_Goblin_Goblin_Idle.SK_GoblinSK_Goblin_Goblin_Idle"));
+    WalkAnimation = Soulwood::Asset<UAnimSequence>(TEXT("/Game/SoulwoodOriginal/Characters/SK_GoblinSK_Goblin_Goblin_Walk.SK_GoblinSK_Goblin_Goblin_Walk"));
+    AttackAnimation = Soulwood::Asset<UAnimSequence>(TEXT("/Game/SoulwoodOriginal/Characters/SK_GoblinSK_Goblin_Goblin_Attack.SK_GoblinSK_Goblin_Goblin_Attack"));
+    DeathAnimation = Soulwood::Asset<UAnimSequence>(TEXT("/Game/SoulwoodOriginal/Characters/SK_GoblinSK_Goblin_Goblin_Death.SK_GoblinSK_Goblin_Goblin_Death"));
+    GetCharacterMovement()->bRunPhysicsWithNoController = true;
+    PlayState(IdleAnimation, true);
     Target = Cast<ASoulwoodHero>(UGameplayStatics::GetPlayerCharacter(this, 0));
+}
+
+void ASoulwoodGoblin::PlayState(UAnimSequence* Animation, bool bLoop)
+{
+    if (Animation && CurrentAnimation != Animation)
+    {
+        GetMesh()->PlayAnimation(Animation, bLoop);
+        CurrentAnimation = Animation;
+    }
 }
 
 void ASoulwoodGoblin::Tick(float DeltaTime)
@@ -191,6 +207,7 @@ void ASoulwoodGoblin::Tick(float DeltaTime)
     AttackCooldown = FMath::Max(0.f, AttackCooldown - DeltaTime);
     if (bWindingUp)
     {
+        PlayState(AttackAnimation, false);
         AttackClock += DeltaTime;
         if (AttackClock >= .62f)
         {
@@ -207,7 +224,11 @@ void ASoulwoodGoblin::Tick(float DeltaTime)
         AttackClock = 0.f;
     }
     else if (Distance < 1800.f && Distance > 150.f)
+    {
+        PlayState(WalkAnimation, true);
         AddMovementInput(ToPlayer.GetSafeNormal2D(), 1.f);
+    }
+    else PlayState(IdleAnimation, true);
     if (Distance < 900.f)
         SetActorRotation(FRotator(0, ToPlayer.Rotation().Yaw, 0));
 }
@@ -220,6 +241,7 @@ float ASoulwoodGoblin::TakeDamage(float DamageAmount, FDamageEvent const& Event,
     if (Health <= 0.f)
     {
         bDead = true;
+        PlayState(DeathAnimation, false);
         DropRewards();
         GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         SetLifeSpan(2.f);
@@ -285,6 +307,21 @@ void ASoulwoodHero::BeginPlay()
     GetMesh()->SetSkeletalMeshAsset(Soulwood::Asset<USkeletalMesh>(TEXT("/Game/SoulwoodOriginal/Characters/SK_Adventurer.SK_Adventurer")));
     Bow->SetStaticMesh(Soulwood::Asset<UStaticMesh>(TEXT("/Game/SoulwoodOriginal/Meshes/SM_HunterBow.SM_HunterBow")));
     Wings->SetStaticMesh(Soulwood::Asset<UStaticMesh>(TEXT("/Game/SoulwoodOriginal/Meshes/SM_AngelWings.SM_AngelWings")));
+    IdleAnimation = Soulwood::Asset<UAnimSequence>(TEXT("/Game/SoulwoodOriginal/Characters/SK_AdventurerSK_Adventurer_Hero_Idle.SK_AdventurerSK_Adventurer_Hero_Idle"));
+    RunAnimation = Soulwood::Asset<UAnimSequence>(TEXT("/Game/SoulwoodOriginal/Characters/SK_AdventurerSK_Adventurer_Hero_Run.SK_AdventurerSK_Adventurer_Hero_Run"));
+    BowAnimation = Soulwood::Asset<UAnimSequence>(TEXT("/Game/SoulwoodOriginal/Characters/SK_AdventurerSK_Adventurer_Hero_Bow_Draw.SK_AdventurerSK_Adventurer_Hero_Bow_Draw"));
+    CastAnimation = Soulwood::Asset<UAnimSequence>(TEXT("/Game/SoulwoodOriginal/Characters/SK_AdventurerSK_Adventurer_Hero_Fireball_Cast.SK_AdventurerSK_Adventurer_Hero_Fireball_Cast"));
+    FlightAnimation = Soulwood::Asset<UAnimSequence>(TEXT("/Game/SoulwoodOriginal/Characters/SK_AdventurerSK_Adventurer_Hero_Flight.SK_AdventurerSK_Adventurer_Hero_Flight"));
+    PlayState(IdleAnimation, true);
+}
+
+void ASoulwoodHero::PlayState(UAnimSequence* Animation, bool bLoop)
+{
+    if (Animation && CurrentAnimation != Animation)
+    {
+        GetMesh()->PlayAnimation(Animation, bLoop);
+        CurrentAnimation = Animation;
+    }
 }
 
 void ASoulwoodHero::Tick(float DeltaTime)
@@ -308,6 +345,11 @@ void ASoulwoodHero::Tick(float DeltaTime)
     }
     Camera->SetFieldOfView(FMath::FInterpTo(Camera->FieldOfView,
         bFlightActive && GetVelocity().Size() > 400.f ? 93.f : 80.f, DeltaTime, 2.2f));
+    if (bDrawing && SelectedAttack == 1) PlayState(BowAnimation, false);
+    else if (GetWorld()->GetTimeSeconds() < CastAnimationUntil) PlayState(CastAnimation, false);
+    else if (bFlightActive) PlayState(FlightAnimation, true);
+    else if (GetVelocity().Size2D() > 40.f) PlayState(RunAnimation, true);
+    else PlayState(IdleAnimation, true);
 }
 
 void ASoulwoodHero::SetupPlayerInputComponent(UInputComponent* Input)
@@ -368,6 +410,7 @@ void ASoulwoodHero::BeginAttack()
     if (SelectedAttack == 0) return;
     bDrawing = true;
     DrawStart = GetWorld()->GetTimeSeconds();
+    if (SelectedAttack == 2) CastAnimationUntil = DrawStart + .65f;
 }
 
 void ASoulwoodHero::ReleaseAttack()
