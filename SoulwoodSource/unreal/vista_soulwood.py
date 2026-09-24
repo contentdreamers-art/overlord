@@ -68,11 +68,6 @@ def material(name,texture,tiling):
     EAL.save_loaded_asset(mat)
     return mat
 
-unreal.EditorLevelLibrary.load_level('/Game/soulwood')
-for actor in WORLD.get_all_level_actors():
-    if actor.get_actor_label().startswith('SW_Vista_'):
-        WORLD.destroy_actor(actor)
-
 forest=import_asset('T_ForestFloor_Photo',TEXTURES,ROOT+'/Textures')
 path=import_asset('T_ForestPath_Photo',TEXTURES,ROOT+'/Textures')
 forest_mat=material('M_ForestFloor_Photo_02',forest,260)
@@ -86,6 +81,13 @@ beech_b=import_asset('SM_VistaBeech_2049',MESHES,ROOT+'/Meshes',True)
 fortress=import_asset('SM_SoulwoodGothicFortress',MESHES,ROOT+'/Meshes',True)
 crag=import_asset('SM_CastleCrag',MESHES,ROOT+'/Meshes',True)
 mountain=import_asset('SM_DistantMountain',MESHES,ROOT+'/Meshes',True)
+
+# Resolve every source asset before changing a saved level. A missing export must
+# leave the existing Soulwood actors intact.
+unreal.EditorLevelLibrary.load_level('/Game/soulwood')
+for actor in WORLD.get_all_level_actors():
+    if actor.get_actor_label().startswith('SW_Vista_'):
+        WORLD.destroy_actor(actor)
 
 tree_count=0
 for actor in WORLD.get_all_level_actors():
