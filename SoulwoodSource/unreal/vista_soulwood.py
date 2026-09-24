@@ -10,6 +10,8 @@ import unreal
 random.seed(46290)
 BASE=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MESHES=os.path.join(BASE,'blender','generated')
+if not os.path.isfile(os.path.join(MESHES,'SM_VistaBeech_2041.fbx')):
+    MESHES='C:/generated'
 TEXTURES=os.path.join(BASE,'unreal','generated_textures')
 ROOT='/Game/SoulwoodOriginal'
 EAL=unreal.EditorAssetLibrary

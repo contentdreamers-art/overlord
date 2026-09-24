@@ -6,7 +6,9 @@ import random
 from mathutils import Vector
 
 random.seed(91625)
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'generated')
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Blender's Text Editor can report the open .blend as a pseudo parent of __file__.
+OUT = os.path.join(SCRIPT_DIR, 'generated') if os.path.isdir(SCRIPT_DIR) else 'C:/generated'
 os.makedirs(OUT, exist_ok=True)
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)
